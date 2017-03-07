@@ -18,9 +18,16 @@ require("jsdom").env("", function(err, window) {
 function processNHANESComponent(year,data)
 {
     $("body").html(data);
-    var links=$("a[href^='/Nchs/Nhanes/']");
-    links.each(function(index){
-        console.log($(this).attr("href"))
+    var grid=$("#GridView1");
+    var rows=$("tr");
+    rows.each(function(index){
+        var cells=$(this).find("td");
+        var label=cells.eq(0);
+        var doc=cells.eq(1).find("a");
+        var contents=cells.eq(2).find("a");
+        console.log(label.text());
+        console.log(doc.attr("href"))
+        console.log(contents.attr("href"))
     });
     
 }
