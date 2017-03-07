@@ -1,0 +1,11 @@
+{
+    "name": "LibreImport",
+    "version": "1.0.0",
+    "keywords": ["util", "functional", "server", "client", "browser"],
+    "author": "yehster",
+    "contributors": [],
+    "dependencies": {
+        "jquery" : "*",
+        "jsdom" : "*"
+    }
+}
