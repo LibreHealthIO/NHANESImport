@@ -111,7 +111,50 @@ function parseCodeBook(path,filename)
       if (err) {
         return console.log(err);
       }
-      console.log(data);
+      $("body").html(data);
+      var codeBook=$("#Codebook");
+      
+      var codes=codeBook.find("dl");
+      const headers=["Variable Name:","SAS Label:","English Text","English Instructions","Target"]
+          
+      var varName;
+      for(var varIdx=0;varIdx<codes.length;varIdx++)
+      {
+          var codeEntry=codes.eq(varIdx);
+          var labels=codeEntry.find("dt");
+          for(var labelIdx=0;labelIdx<labels.length;labelIdx++)
+          {
+              var label=labels.eq(labelIdx);
+              var value=label.next();
+              if(label.text().includes("Variable Name:"))
+              {
+                  
+              }
+              else if(label.text().includes("SAS Label:"))
+              {
+                  
+              }
+              else if(label.text().includes("English Text:"))
+              {
+              }
+              else if(label.text().includes("English Instructions:"))
+              {
+                  
+              }
+              else if(label.text().includes("Target:"))
+              {
+
+              }
+              
+            }
+
+      }
+      var values=codes.parent().children("table.values");
+      if(values.length)
+      {
+          //console.log(values.html());
+      }
+      
     });    
 }
 function parseNHANES(year)
