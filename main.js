@@ -105,7 +105,7 @@ function createCSVFromXPT(path,filename)
 }
 
 
-function parseCodeBook(path,filename)
+function parseCodeBook(year,path,filename)
 {
     fs.readFile(path+filename, 'utf8', function (err,data) {
       if (err) {
@@ -117,7 +117,7 @@ function parseCodeBook(path,filename)
       var codes=codeBook.find("dl");
       const headers=["Variable Name:","SAS Label:","English Text","English Instructions","Target"]
           
-      var varName;
+      var varName="",SASLabel="",description="",instructions="",target="";
       for(var varIdx=0;varIdx<codes.length;varIdx++)
       {
           var codeEntry=codes.eq(varIdx);
@@ -128,34 +128,51 @@ function parseCodeBook(path,filename)
               var value=label.next();
               if(label.text().includes("Variable Name:"))
               {
-                  
+                  varName=value.text();
               }
               else if(label.text().includes("SAS Label:"))
               {
-                  
+                  SASLabel=value.text();
               }
               else if(label.text().includes("English Text:"))
               {
+                  description=value.text();
               }
               else if(label.text().includes("English Instructions:"))
               {
-                  
+                  instructions=value.text();
               }
               else if(label.text().includes("Target:"))
               {
-
+                  target=value.text();
               }
               
             }
+            var codeHTML="";      
+              var values=codes.parent().children("table.values");
+              if(values.length)
+              {
+                  //console.log(values.html());
+                  codeHTML=values.html();
+              }
+
+              console.log(varName);
+              var parameters=[year,filename,varName,SASLabel,description,instructions,target,codeHTML]; 
+              dbConn.query("REPLACE INTO variables (year,source,variable,label,description,instructions,target,codes) values (?,?,?,?,?,?,?,?)",
+                            parameters,
+                            function(err,data)
+                            {
+                                if(err)
+                                {
+                                    console.log(JSON.stringify(parameters))
+                                    console.log(err);
+                                }
+                            }
+            );    
 
       }
-      var values=codes.parent().children("table.values");
-      if(values.length)
-      {
-          //console.log(values.html());
-      }
-      
-    });    
+    }
+    );
 }
 function parseNHANES(year)
 {
@@ -167,7 +184,7 @@ function parseNHANES(year)
             var curRow=rows[fileIdx];
 //            console.log(JSON.stringify(rows[fileIdx]));
             createCSVFromXPT(yearPath,curRow.sasfile);
-            parseCodeBook(yearPath,curRow.document);
+            parseCodeBook(year,yearPath,curRow.document);
         }
         
     });
