@@ -174,8 +174,11 @@ function parseCodeBook(year,path,filename)
     }
     );
 }
-function parseNHANES(year)
+function parseNHANES(year,mode)
 {
+    var createCSV=(mode & 1);
+    var parseDocuments=(mode & 2);
+    
     var yearPath=process.cwd() + path.sep + "datafiles"+ path.sep + year+ path.sep;
     dbConn.query("SELECT * FROM filelist WHERE year=?",[year],function(err,rows)
     {
@@ -183,17 +186,51 @@ function parseNHANES(year)
         {
             var curRow=rows[fileIdx];
 //            console.log(JSON.stringify(rows[fileIdx]));
-            createCSVFromXPT(yearPath,curRow.sasfile);
-            parseCodeBook(year,yearPath,curRow.document);
+            if(createCSV)
+            {
+                createCSVFromXPT(yearPath,curRow.sasfile);
+                
+            }
+            if(parseDocuments)
+            {
+                parseCodeBook(year,yearPath,curRow.document);                
+            }
         }
         
     });
 }
 
+function createConvertScript(year)
+{
+    var yearPath=process.cwd() + path.sep + "datafiles"+ path.sep + year+ path.sep;
+
+    dbConn.query("SELECT * FROM filelist WHERE year=?",[year],function(err,rows)
+    {
+        var script="import(Nmisc)\n";
+        for(var fileIdx=0;fileIdx<rows.length;fileIdx++)
+        {
+            var curRow=rows[fileIdx];
+            var baseFile=curRow.sasfile.substring(0,curRow.sasfile.lastIndexOf("."));
+            var inputFile=yearPath+curRow.sasfile;
+            var outputFile=yearPath+baseFile+".csv";
+            inputFile=inputFile.replace(/\\/g,"/");
+            outputFile=outputFile.replace(/\\/g,"/");
+            
+            script+= baseFile+" <- sasxport.get(\""+inputFile+"\")\n";
+            script+="write.csv("+baseFile+", file = \""+outputFile + "\")\n";
+            
+        }
+        console.log(script);
+    });
+    
+
+}
+
 function process_data()
 {
 //    getNHANES(2011);
-    parseNHANES(2011);
+//    parseNHANES(2011,1);
+    createConvertScript(2011);
 }
 
 process_data();
