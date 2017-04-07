@@ -164,9 +164,7 @@ function NHANESData(dbServer,suffix)
         }); // End new Promise
     }; // End load_demographics method
     
-    this.load_demographics().then(()=>{
-            console.log(JSON.stringify(this.patient_list[0]))
-            console.log(this.patient_list.length)});
+
     return this;
 }
 var EHRconn = new EHRConnection(serverData);
@@ -240,3 +238,10 @@ function namesData()
 var names= new namesData();
 
 var NHANESconn= new NHANESData(dbConn,"_g")
+    NHANESconn.load_demographics().then(()=>{
+            console.log(JSON.stringify(NHANESconn.patient_list[0]));
+            console.log(NHANESconn.patient_list.length);
+            EHRconn.login().then((data)=>{
+                
+            });
+        });
