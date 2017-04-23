@@ -57,5 +57,18 @@ function loadMCQProblemData()
         
 }
 
+function loadBPQProblemData()
+{
+    NHANESconn.load_bpq_data().then(()=>{
+            console.log("BPQ Data Loaded");
+            EHRconn.login().then((data)=>{
+                asyncLoop(NHANESconn.bpq_data,EHRconn.addProblemListLoop);
+            });
+    });// End load_mcq_data
+        
+}
+
+
 //loadMCQProblemData();
-createPatients();
+loadBPQProblemData();
+//createPatients();

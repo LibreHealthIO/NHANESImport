@@ -101,6 +101,50 @@ addProblemMap('mcq160l',"K76.9","Liver disease, unspecified","Ever told you had 
 addProblemMap('mcq160m',"E07.9","Disorder of thyroid, unspecified","Ever told you had thyroid problem");
 addProblemMap('mcq160n',"M10.9","Gout, unspecified","Doctor ever told you that you had gout?");
 
+var cancerMap={};
+function addCancerMap(NHANESCode,ICDCode,Description,NHANES)
+{
+    cancerMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANES);
+}
+addCancerMap(10,"C67.9","Malignant neoplasm of bladder, unspecified","Bladder");
+addCancerMap(11,"C96.9","Other and unspecified malignant neoplasms of lymphoid, hematopoietic and related tissue","Blood");
+addCancerMap(12,"C41.9","Malignant neoplasm of bone and articular cartilage, unspecified","Bone");
+addCancerMap(13,"C71.9","Malignant neoplasm of brain, unspecified","Brain");
+addCancerMap(14,"C50.919","Malignant neoplasm of unspecified site of unspecified female breast","Breast"); // Need to add check/fix for male
+addCancerMap(15,"C53.9","Malignant neoplasm of cervix uteri, unspecified","Cervix (cervical)");
+addCancerMap(16,"C18.9","Malignant neoplasm of colon, unspecified","Colon"); 
+addCancerMap(17,"C15.9","Malignant neoplasm of esophagus, unspecified","Esophagus (esophageal)"); 
+addCancerMap(18,"C23","Malignant neoplasm of gallbladder","Gallbladder"); 
+addCancerMap(19,"C64.9","Malignant neoplasm of unspecified kidney, except renal pelvis","Kidney"); 
+addCancerMap(20,"C32.9","Malignant neoplasm of larynx, unspecified","Larynx/ windpipe"); 
+addCancerMap(21,"C95.90","Leukemia, unspecified not having achieved remission","Leukemia"); 
+addCancerMap(22,"C22.9","Malignant neoplasm of liver, not specified as primary or secondary","Liver"); 
+addCancerMap(23,"C34.90","Malignant neoplasm of unspecified part of unspecified bronchus or lung","Lung"); 
+addCancerMap(24,"C96.9","Malignant neoplasm of lymphoid, hematopoietic and related tissue, unspecified","Lymphoma/ Hodgkins disease"); 
+addCancerMap(25,"C43.9","Malignant melanoma of skin, unspecified","Melanoma"); 
+addCancerMap(26,"C06.9","Malignant neoplasm of mouth, unspecified","Mouth/tongue/lip"); 
+addCancerMap(27,"C72.9","Malignant neoplasm of central nervous system, unspecified","Nervous system"); 
+addCancerMap(28,"C56.9","Malignant neoplasm of unspecified ovary","Ovary (ovarian)"); 
+addCancerMap(29,"C25.9","Malignant neoplasm of pancreas, unspecified","Pancreas (pancreatic)"); 
+addCancerMap(30,"C61","Malignant neoplasm of prostate","Prostate"); 
+addCancerMap(31,"C20","Malignant neoplasm of rectum","Rectum (rectal)"); 
+addCancerMap(32,"C44.99","Other specified malignant neoplasm of skin, unspecified","Skin (non-melanoma)"); 
+addCancerMap(33,"C44.90","Unspecified malignant neoplasm of skin, unspecified","Skin (don't know what kind)"); 
+addCancerMap(34,"C49.9","Malignant neoplasm of connective and soft tissue, unspecified","Soft tissue (muscle or fat)"); 
+addCancerMap(35,"C16.9","Malignant neoplasm of stomach, unspecified","Stomach"); 
+addCancerMap(36,"C62.90","Malignant neoplasm of unspecified testis, unspecified whether descended or undescended","Testis (testicular)"); 
+addCancerMap(37,"C73","Malignant neoplasm of thyroid gland","Thyroid"); 
+addCancerMap(38,"C55","Malignant neoplasm of uterus, part unspecified","Uterus (uterine)"); 
+addCancerMap(39,"C76.8","Malignant neoplasm of other specified ill-defined sites","Other"); 
+addCancerMap(99,"C80.1","Malignant (primary) neoplasm, unspecified","Don't know");
+
+function mcqCancerLookup(problemList,mcqData)
+{
+    if(((mcqData>=10) && (mcqData<=39)) || (mcqData===99))
+    {
+        problemList.push(cancerMap[mcqData]);
+    }
+}
 function MCQData(mcq_row)
 {
     this.seqn=mcq_row.seqn;
@@ -112,12 +156,42 @@ function MCQData(mcq_row)
             this.problemList.push(problemMap[question]);
         }
     }
+    mcqCancerLookup(this.problemList,mcq_row['mcq230a']);
+    mcqCancerLookup(this.problemList,mcq_row['mcq230b']);
+    mcqCancerLookup(this.problemList,mcq_row['mcq230c']);
+
     
-    console.log(JSON.stringify(this));
+    
+    
     return this;
     
 }
 
+
+var HTNDiagnosis=new problemEntry("I10","Essential (primary) hypertension","Told had high blood pressure - 2+ times or Being Precribed");
+var BorderlineHTNDiagnosis=new problemEntry("R03.0","Elevated blood-pressure reading, without diagnosis of hypertension","Borderline Hypertension");
+var HighCholDiagnosis=new problemEntry("E78.00","Pure hypercholesterolemia, unspecified","Doctor told you - high cholesterol level");
+function BPQData(bpq_row)
+{
+    this.seqn=bpq_row.seqn;
+    this.problemList=[];
+    if((bpq_row['bpq030']===1) || (bpq_row['bpq040a']===1)|| (bpq_row['bpq050a']===1))
+    {
+        // If answer to 2+ times told or taking prescribed med for HBP, then considering diagnosis to be positive for HTN
+        this.problemList.push(HTNDiagnosis);
+    }
+    else if (bpq_row['bpq057']===1)
+    {
+        // In other cases, if no clear indication of true HTN, then if answer to borderline question is yes, then assign just borderline
+        this.problemList.push(BorderlineHTNDiagnosis);
+    } // If 'bpq020(Ever told you had high blood pressure)' is yes, and no other factors are 'yes' then no diagnosis added
+    
+    if(bpq_row['bpq080']===1)
+    {
+        this.problemList.push(HighCholDiagnosis);
+    }
+    return this;
+}
 exports.NHANESData=function(dbServer,suffix)
 {
     this.dbConn=dbServer;
@@ -161,6 +235,7 @@ exports.NHANESData=function(dbServer,suffix)
         {
             var mcq_table = "mcq" + self.suffix;
             var limits = " LIMIT 500 ";
+            limits = "";
             var sqlSelectMCQ = " SELECT * FROM "+mcq_table + limits;
             self.dbConn.query(sqlSelectMCQ,[],function(err,rows)
             {
@@ -176,7 +251,31 @@ exports.NHANESData=function(dbServer,suffix)
                 resolve(self);
             }); // end query callback
         }); //End New Promise
-    } // End load_mcq_data method
+    }; // End load_mcq_data method
+
+    this.bpq_data=[];
+    this.load_bpq_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var bpq_table = "bpq" + self.suffix;
+            var limits = "";
+            var sqlSelectMCQ = " SELECT * FROM "+bpq_table + limits;
+            self.dbConn.query(sqlSelectMCQ,[],function(err,rows)
+            {
+                if(err)
+                {
+                    console.log(err);
+                    reject(err);
+                }
+                for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                {
+                    self.bpq_data.push(new BPQData(rows[rowIdx]));
+                }
+                resolve(self);
+            }); // end query callback
+        }); //End New Promise
+    }; // End load_mcq_data method
 
     return this;
 }
