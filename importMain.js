@@ -64,11 +64,49 @@ function loadBPQProblemData()
             EHRconn.login().then((data)=>{
                 asyncLoop(NHANESconn.bpq_data,EHRconn.addProblemListLoop);
             });
-    });// End load_mcq_data
+    });// End load_bpq_data
+        
+}
+
+function loadDIQProblemData()
+{
+    NHANESconn.load_diq_data().then(()=>{
+            console.log("DIQ Data Loaded");
+            console.log(JSON.stringify(NHANESconn.diq_data));
+            EHRconn.login().then((data)=>{
+                asyncLoop(NHANESconn.diq_data,EHRconn.addProblemListLoop);
+            });
+    });// End load_diq_data
+        
+}
+
+function loadKIQ_UProblemData()
+{
+    NHANESconn.load_kiq_u_data().then(()=>{
+            console.log("KIQ_U Data Loaded");
+            console.log(JSON.stringify(NHANESconn.kiq_u_data));
+            EHRconn.login().then((data)=>{
+                asyncLoop(NHANESconn.kiq_u_data,EHRconn.addProblemListLoop);
+            });
+    });// End load_diq_data
         
 }
 
 
+function loadRXQ_RX_Data()
+{
+    NHANESconn.load_rxq_rx_data().then(()=>{
+                console.log("RXQ_RX Data Loaded");
+                console.log(JSON.stringify(NHANESconn.rxq_rx_data));
+                EHRconn.login().then((data)=>{
+                    asyncLoop(NHANESconn.rxq_rx_data,EHRconn.addMedicationsListLoop);
+                });                
+            });
+}
 //loadMCQProblemData();
-loadBPQProblemData();
+//loadBPQProblemData();
+
+//loadDIQProblemData();
+//loadKIQ_UProblemData();
+loadRXQ_RX_Data();
 //createPatients();

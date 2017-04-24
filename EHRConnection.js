@@ -202,5 +202,45 @@ exports.EHRConnection =  function(serverData)
         }
 
     };
+    
+    
+    this.createMedicationsLoop = function(medication,nxt)
+    {
+        var issue_url=self.server_name+"/interface/patient_file/summary/add_edit_issue.php?issue=0&thisenc=0&thispid="+self.pid;
+        var form_data={
+            form_type:2
+            ,form_title:medication.drugName
+            ,form_save:'Save'
+        }
+        console.log(self.pid+":"+medication.drugName);
+        request({
+                url:issue_url
+                ,jar: true
+                ,method: "POST"
+                ,formData: form_data
+            },
+            function(err,req,body)
+            {
+                if(err)
+                {
+                    console.log(err);
+                }
+                nxt();
+            }
+        ); // End request
+    };
+    this.addMedicationsListLoop = function(MedicationInfo,next)
+    {
+        self.selectPatient(MedicationInfo.seqn).then(()=>{
+                asyncLoop(MedicationInfo.drugList,self.createMedicationsLoop
+                    ,function()
+                    {
+                        // don't go to the next patient/list until the current list is completed.
+                        next();
+                    });
+                
+            }).catch((err)=>{console.log(err); next();});
+        
+    };
     return this;
 };

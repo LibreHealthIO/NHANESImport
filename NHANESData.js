@@ -192,6 +192,50 @@ function BPQData(bpq_row)
     }
     return this;
 }
+
+var DiabetesDiagnosis=new problemEntry("E11.9","Type 2 diabetes mellitus without complications","Doctor told you have diabetes");
+var DiabetesRetinopathyDiagnosis=new problemEntry("E11.319","Type 2 diabetes mellitus with unspecified diabetic retinopathy without macular edema","Diabetes affected eyes/had retinopathy");
+function DIQdata(row)
+{
+    this.seqn=row.seqn;
+    this.problemList=[];
+    if(row['diq010']===1)
+    {
+        if(row['diq080']!==1)
+        {
+            this.problemList.push(DiabetesDiagnosis)        
+        }
+        else
+        {
+            this.problemList.push(DiabetesRetinopathyDiagnosis);
+        }
+    }
+    return this;
+}
+
+CKDDiagnosis=new problemEntry("N18.9","Chronic kidney disease, unspecified","Ever told you had weak/failing kidneys")
+DialysisDiagnosis=new problemEntry("Z99.2","Dependence on renal dialysis","Received dialysis in past 12 months")
+function KIQ_Udata(row)
+{
+    this.seqn=row.seqn;
+    this.problemList=[];
+    if(row['kiq022']===1)
+    {
+        this.problemList.push(CKDDiagnosis);
+    }
+    if(row['kiq025']===1)
+    {
+        this.problemList.push(DialysisDiagnosis);
+    }
+    
+    return this;
+}
+
+function drugData(row)
+{
+    this.drugName=row['rxddrug'];
+    this.drugCode=row['rxdrugid'];
+}
 exports.NHANESData=function(dbServer,suffix)
 {
     this.dbConn=dbServer;
@@ -260,8 +304,8 @@ exports.NHANESData=function(dbServer,suffix)
         {
             var bpq_table = "bpq" + self.suffix;
             var limits = "";
-            var sqlSelectMCQ = " SELECT * FROM "+bpq_table + limits;
-            self.dbConn.query(sqlSelectMCQ,[],function(err,rows)
+            var sqlSelect = " SELECT * FROM "+bpq_table + limits;
+            self.dbConn.query(sqlSelect,[],function(err,rows)
             {
                 if(err)
                 {
@@ -275,9 +319,97 @@ exports.NHANESData=function(dbServer,suffix)
                 resolve(self);
             }); // end query callback
         }); //End New Promise
-    }; // End load_mcq_data method
+    }; // End load_bpq_data method
+
+    this.diq_data=[];
+    this.load_diq_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var diq_table = "diq" + self.suffix;
+            var limits = " LIMIT 100 ";
+            limits="";
+            var sqlSelect = " SELECT * FROM "+diq_table + limits;
+            self.dbConn.query(sqlSelect,[],function(err,rows)
+            {
+                if(err)
+                {
+                    console.log(err);
+                    reject(err);
+                }
+                for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                {
+                    self.diq_data.push(new DIQdata(rows[rowIdx]));
+                }
+                resolve(self);
+            }); // end query callback
+        }); //End New Promise
+    }; // End load_diq_data method
+
+    this.kiq_u_data=[];
+    this.load_kiq_u_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var table = "kiq_u" + self.suffix;
+            var limits = " LIMIT 100 ";
+            limits="";
+            var sqlSelect = " SELECT * FROM "+table + limits;
+            self.dbConn.query(sqlSelect,[],function(err,rows)
+            {
+                if(err)
+                {
+                    console.log(err);
+                    reject(err);
+                }
+                for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                {
+                    self.kiq_u_data.push(new KIQ_Udata(rows[rowIdx]));
+                }
+                resolve(self);
+            }); // end query callback
+        }); //End New Promise
+    }; // End load_kiq_u_data method
+
+    this.rxq_rx_data=[];
+    this.load_rxq_rx_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var table = "rxq_rx" + self.suffix;
+            var where = " WHERE rxduse=1 "
+            var order = " ORDER BY seqn asc "
+            var sqlSelect = " SELECT * FROM "+table + where + order;
+            self.dbConn.query(sqlSelect,[],function(err,rows)
+            {
+                if(err)
+                {
+                    console.log(err);
+                    reject(err);
+                }
+                var lastSEQN=-1;
+                var curPatientData={}
+                for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                {
+                    if(rows[rowIdx].seqn!==lastSEQN)
+                    {
+                        lastSEQN=rows[rowIdx].seqn;
+                        curPatientData={};
+                        curPatientData.seqn=lastSEQN;
+                        curPatientData.drugList=[];
+                        self.rxq_rx_data.push(curPatientData)
+                    }
+                    curPatientData.drugList.push(new drugData(rows[rowIdx]));
+
+                }
+                resolve(self);
+            }); // end query callback
+
+        }); // End New Promise
+    }; // End load_rxq_rx_data;
 
     return this;
+
 }
 
 function namesData()
