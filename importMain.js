@@ -12,9 +12,9 @@ var asyncLoop = require('node-async-loop');
 var cheerio = require('cheerio');
 
 var serverData={
-    server_name: 'http://192.168.249.128/libreehr'
+    server_name: 'http://192.168.249.128/nhanes'
     ,userid: 'admin'
-    ,password: 'pass'
+    ,password: 'password'
 }
 
 var mysql=require('mysql');
