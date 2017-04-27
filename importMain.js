@@ -108,5 +108,5 @@ function loadRXQ_RX_Data()
 
 //loadDIQProblemData();
 //loadKIQ_UProblemData();
-loadRXQ_RX_Data();
-//createPatients();
+//loadRXQ_RX_Data();
+createPatients();

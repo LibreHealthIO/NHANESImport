@@ -249,6 +249,20 @@ function dropAndCreateTable(tablename,records)
             insertColumnDefs+=", seqn";
             colParams+=", ?";
         }
+        else if(column==="rxddrug")
+        {
+            columnsCreate+= ",\n";
+            columnsCreate+= column + " " + "varchar(255) ";
+            insertColumnDefs+=", "+column;
+            colParams+=", ?";
+        }        
+        else if(column==="rxddrgid")
+        {
+            columnsCreate+= ",\n";
+            columnsCreate+= column + " " + "varchar(255) ";
+            insertColumnDefs+=", "+column;
+            colParams+=", ?";
+        }        
         else
         {
             columnsCreate+= ",\n";
@@ -322,4 +336,17 @@ function process_data()
     createConvertScript(2011);
 }
 
-loadCSVfile(2011,"DEMO_G.csv");
+/*
+select distinct source from `variables` WHERE variable in ('RIAGENDR','RIDAGEYR','RIDRETH1','DMDEDUC2','DMDMARTL','INDFMIN2','BPXSY2','BPXDI2','BPXCHR','BMXWT','BMXHT','BMXBMI','BMXWAIST','BMXTRI','URDACT','LBDHDD','LBDLDL','LBXTR','LBXTC','LBXWBCSI','LBXHGB','LBXHCT','LBXPLTSI','LBXCRP','LBXFER','LBXGH','LBXGLU','LBXIN','LBXP1','LBXSBU','LBXSCR','LBDTSH1S','HSD010','BPQ030','MCQ160g','MCQ160f','MCQ160b','HCQ160a','MCQ010','DIQ010','MCQ180C','MCQ160E','DPQ020','MCQ220','PAQ706','PAQ610','PAD680','ALQ130','SMQ040','DUQ240','RXDCOUNT','RXDRUG','RXDDRGID','HIQ011','HIQ031B','HIQ031D')
+ */
+//loadCSVfile(2011,"DEMO_G.csv");
+//loadCSVfile(2011,"BPX_G.csv");
+//loadCSVfile(2011,"BMX_G.csv");
+//loadCSVfile(2011,"BIOPRO_G.csv");
+//loadCSVfile(2011,"ALB_CR_G.csv");
+//loadCSVfile(2011,"MCQ_G.csv");
+//loadCSVfile(2011,"PAQ_G.csv");
+//loadCSVfile(2011,"DIQ_G.csv");
+//loadCSVfile(2011,"KIQ_U_G.csv");
+loadCSVfile(2011,"RXQ_RX_G.csv");
+
