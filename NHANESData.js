@@ -409,6 +409,111 @@ exports.NHANESData=function(dbServer,suffix)
         }); // End New Promise
     }; // End load_rxq_rx_data;
 
+    function bp_reading(idx,row)
+    {
+        this.systolic=row['bpxsy'+idx];
+        this.diastolic=row['bpxdi'+idx];
+        return this;
+    }
+
+    function bpmx_data(seqn)
+    {
+        this.seqn = seqn;
+        this.hr=null;
+        this.bp_values=[];
+        this.irregular=null;
+        
+        this.height=null;
+        this.weight=null;
+        this.bmi=null;
+        this.waist=null;
+        var self=this;
+        
+        this.set_bp_data = function(bprow)
+        {
+            self.hr=bprow['bpxpls'];
+            self.irregular=(bprow['bpxpuls']===2);
+            for(var idx=1;idx<=4;idx++)
+            {
+                var bpr=new bp_reading(idx,bprow);
+                if(!(bpr.systolic===null))
+                {
+                    self.bp_values.push(bpr);                    
+                }
+            }
+        };
+        this.set_bm_data = function(bmrow)
+        {
+            self.weight=bmrow['bmxwt'];
+            self.height=bmrow['bmxht'];
+            self.bmi=bmrow['bmxbmi'];
+            self.waist=bmrow['bmxwaist'];
+        };
+        return this;
+    }
+    this.bpx_data=[];
+    this.load_bpx_data = function()
+    {
+
+        
+        return new Promise(function(resolve,reject)
+        {
+            var entriesMap={};
+            var tableBPX= "bpx" + self.suffix;            
+            var tableBMX= "bmx" + self.suffix;
+            var limit = " LIMIT 50 ";
+//            limit = "";
+            var sqlBPSelect = " SELECT * FROM " + tableBPX + limit;
+            var sqlBMSelect = " SELECT * FROM " + tableBMX + limit;
+            self.dbConn.query(sqlBPSelect,[],function(err,BPXrows)
+            {
+                if(err)
+                {
+                    console.log(err);
+                    reject(err);
+                }
+                self.dbConn.query(sqlBMSelect,[],function(err,BMXrows)
+                {
+                    if(err)
+                    {
+                        console.log(err);
+                        reject(err);                        
+                    }
+                    for(var rowIdx=0;rowIdx<BPXrows.length;rowIdx++)
+                    {
+                        var curRow=BPXrows[rowIdx]
+                        var entry=new bpmx_data(curRow.seqn);
+                        entriesMap[curRow.seqn]=entry;
+                        self.bpx_data.push(entry);
+                        entry.set_bp_data(curRow);
+                    }
+
+                    for(rowIdx=0;rowIdx<BMXrows.length;rowIdx++)
+                    {
+                        var curRow=BMXrows[rowIdx]
+                        
+                        var entry;
+                        if(curRow.seqn in entriesMap)
+                        {
+                            entry=entriesMap[curRow.seqn]
+                        }
+                        else
+                        {
+                            entry=new bpmx_data(curRow.seqn);
+                            entriesMap[curRow.seqn]=entry;
+                            self.bpx_data.push(entry);
+                        }
+                        entry.set_bm_data(curRow);
+                    }
+                    
+                    console.log(JSON.stringify(self.bpx_data));
+                    
+                    
+                }); //END BM Query
+            }); // END BP Query
+        }); // End New Promise
+    }
+
     return this;
 
 }

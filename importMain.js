@@ -103,10 +103,18 @@ function loadRXQ_RX_Data()
                 });                
             });
 }
+
+function loadBP_Data()
+{
+    NHANESconn.load_bpx_data().then(()=>{
+        
+        });
+}
 //loadMCQProblemData();
 //loadBPQProblemData();
 
 //loadDIQProblemData();
 //loadKIQ_UProblemData();
 //loadRXQ_RX_Data();
-createPatients();
+//createPatients();
+loadBP_Data();
