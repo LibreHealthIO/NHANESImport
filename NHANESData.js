@@ -461,8 +461,8 @@ exports.NHANESData=function(dbServer,suffix)
             var entriesMap={};
             var tableBPX= "bpx" + self.suffix;            
             var tableBMX= "bmx" + self.suffix;
-            var limit = " LIMIT 50 ";
-//            limit = "";
+            var limit = " LIMIT 2 ";
+            limit = "";
             var sqlBPSelect = " SELECT * FROM " + tableBPX + limit;
             var sqlBMSelect = " SELECT * FROM " + tableBMX + limit;
             self.dbConn.query(sqlBPSelect,[],function(err,BPXrows)
@@ -505,8 +505,7 @@ exports.NHANESData=function(dbServer,suffix)
                         }
                         entry.set_bm_data(curRow);
                     }
-                    
-                    console.log(JSON.stringify(self.bpx_data));
+                    resolve(self);
                     
                     
                 }); //END BM Query

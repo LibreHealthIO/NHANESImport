@@ -17,6 +17,8 @@ exports.EHRConnection =  function(serverData)
     this.userid=serverData.userid;
     this.password=serverData.password;
     this.pid=null;
+    this.encounter_info=[];
+    this.dob=null;
     var self=this;
     const loginPage='/interface/main/main_screen.php?auth=login&site=default'
     
@@ -142,7 +144,29 @@ exports.EHRConnection =  function(serverData)
                             {
                                 reject(err);
                             }
-                            
+                            self.encounter_info=[];
+                            var setMyPatientPos=body.indexOf("function setMyPatient()");
+                            var endMyPatientPos=body.indexOf("parent.left_nav.setPatientEncounter(",setMyPatientPos)
+                            var patientInfo=body.substring(setMyPatientPos,endMyPatientPos);
+                            var EncounterInfoPos=patientInfo.indexOf("var EncounterDateArray");
+                            var EncounterInfoString=patientInfo.substring(EncounterInfoPos);
+                            const DOB_Begin=" DOB: ";
+                            const DOB_End=" Age:"
+                            var DOBStartPos=patientInfo.indexOf(DOB_Begin);
+                            var DOBFinishPos=patientInfo.indexOf(DOB_End);
+                            var DOB_String=patientInfo.substring(DOBStartPos+DOB_Begin.length,DOBFinishPos);
+                            self.DOB=DOB_String;
+                            self.DOBParts=DOB_String.split("-");
+                            eval(EncounterInfoString);
+                            for(var idx=0;idx<EncounterDateArray.length;idx++)
+                            {
+                                var encounterInfo={};
+                                encounterInfo.date=EncounterDateArray[idx];
+                                encounterInfo.id=EncounterIdArray[idx]
+                                encounterInfo.category=CalendarCategoryArray[idx];
+                                self.encounter_info.push(encounterInfo);
+                                
+                            }
                             resolve(self);
                         }
                     ); // End Select Request
@@ -241,6 +265,126 @@ exports.EHRConnection =  function(serverData)
                 
             }).catch((err)=>{console.log(err); next();});
         
+    };
+    
+    
+    this.selectOrCreateEncounter = function()
+    {
+        return new Promise(function (resolve,reject) {
+            var encounterSetURL=self.server_name+"/interface/patient_file/encounter/encounter_top.php?set_encounter=";
+            if(self.encounter_info.length>0)
+            {
+                self.encDate=self.encounter_info[0].date;
+                request({
+                    url:encounterSetURL+self.encounter_info[0].id
+                    ,jar: true
+                    ,method: "GET"
+                },
+                function(err,req,body)
+                {
+                    resolve(self);
+                });
+            }
+            else
+            {
+                // Need to create the Encounter
+                var encounterNewURL=self.server_name+"/interface/forms/patient_encounter/save.php";
+                var encDate="2016-12-31";
+                self.encDate=encDate;
+                request({
+                    url:encounterNewURL
+                    ,jar: true
+                    ,method: "POST"
+                    ,formData: {
+                        mode: "new"
+                        ,pc_catid: "9"
+                        ,form_sensitivity: "normal"
+                        ,form_referral_source:""
+                        ,form_date: encDate
+                        ,reason: "NHANES data"
+                        ,form_onset_date: ""
+                    }
+                },
+                function(err,req,body)
+                {
+                    resolve(self);
+                });
+                
+            }
+      
+        });
+    };
+    
+    this.createVitalsBP=function(measurementData,next)
+    {
+        var formData={Submit:"Save+Form"
+                      ,activity:"1"
+                      ,id:""
+                      ,pid:self.pid
+                      ,process:"true"};
+        var vitalsSaveURL=self.server_name+"/interface/forms/vitals/save.php";
+        if(self.itemCounter===0)
+        {
+            formData.weight=self.currentBPMData.weight*2.2; // NHANES data is metric, EHR data is English
+            formData.height=self.currentBPMData.height/2.54;
+            formData.pulse=self.currentBPMData.hr;
+            formData.BMI=self.currentBPMData.bmi;
+            formData.waist_circ=self.currentBPMData.waist/2.54;
+            
+        }
+        formData.bps=measurementData.systolic;
+        formData.bpd=measurementData.diastolic;
+        
+        formData.date=self.encDate+" "+"0"+(self.itemCounter)+":00"
+        for(prop in formData)
+        {
+            if(formData[prop]===null)
+            {
+                formData[prop]="";
+            }
+        }
+        request({
+            url:vitalsSaveURL
+            ,jar: true
+            ,method: "POST"
+            ,formData: formData
+            }
+            ,
+            function(err,req,body)
+            {
+                if(err)
+                {
+                    console.log(err);
+                }
+                else
+                {
+                }
+                console.log("Vitals Post");
+                self.itemCounter++;
+                next();
+                
+            }
+        );
+    };
+    
+    this.addBPDataListLoop = function(BPInfo,next)
+    {
+        self.selectPatient(BPInfo.seqn).then(()=>{
+
+            self.currentBPMData=BPInfo;
+            self.itemCounter=0;
+            self.selectOrCreateEncounter().then(()=>{
+                console.log(BPInfo.seqn);
+                if(BPInfo.bp_values.length===0)
+                {
+                    console.log("No BP Data");
+                    console.log(JSON.stringify(self.currentBPMData));
+                    BPInfo.bp_values.push({systolic:"",diastolic:""});
+                }
+                asyncLoop(BPInfo.bp_values,self.createVitalsBP,()=>{next();});
+            });
+            
+        }).catch((err)=>{console.log(err); next();});
     };
     return this;
 };
