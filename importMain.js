@@ -107,8 +107,22 @@ function loadRXQ_RX_Data()
 function loadBP_Data()
 {
     NHANESconn.load_bpx_data().then(()=>{
-        
+        console.log("BP Data loaded");
+        console.log(JSON.stringify(NHANESconn.bpx_data));
+        EHRconn.login().then((data)=>{
+                    asyncLoop(NHANESconn.bpx_data,EHRconn.addBPDataListLoop);
+                });
         });
+}
+
+function loadLab_Data()
+{
+    NHANESconn.load_lab_data().then(()=>{
+        console.log("Lab data loaded");
+        EHRconn.login().then((data)=>{
+                    asyncLoop(NHANESconn.lab_data,EHRconn.addLabDataListLoop);
+                });
+    });
 }
 //loadMCQProblemData();
 //loadBPQProblemData();
@@ -117,4 +131,4 @@ function loadBP_Data()
 //loadKIQ_UProblemData();
 //loadRXQ_RX_Data();
 //createPatients();
-loadBP_Data();
+loadLab_Data();

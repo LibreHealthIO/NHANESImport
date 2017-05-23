@@ -386,5 +386,39 @@ exports.EHRConnection =  function(serverData)
             
         }).catch((err)=>{console.log(err); next();});
     };
+    
+    this.createLabOrder = function()
+    {
+        var form_data=
+            {
+                form_provider_id:"1"
+                ,form_lab_id:"1"
+                ,form_date_ordered: "2016-12-31"
+                ,form_date_collected:" 2016-12-31+00:00"
+                ,form_order_priority:""
+                ,form_order_status:""
+                ,form_clinical_hx:""
+                ,form_patient_instructions:""
+                ,"form_proc_order_title[0]":"Procedure"
+                ,"form_proc_type_desc[0]":"NHANES Lab Panel"
+                ,"form_proc_type[0]":"1"
+                ,"form_proc_type_diag[0]":""
+                ,procedure_type_names:"procedure"
+                ,bn_save:"Save"
+                
+                
+            }
+    };
+    
+    this.addLabDataListLoop = function(LabData,next)
+    {
+        self.selectPatient(LabData.seqn).then(()=>{
+            self.selectOrCreateEncounter().then(()=>{
+                console.log(LabData.seqn);
+                next();
+            });// end select/CreateEncounter
+        }).catch((err)=>{console.log(err); next();}); // end select patient
+
+    }
     return this;
 };

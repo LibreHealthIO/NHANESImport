@@ -490,12 +490,12 @@ exports.NHANESData=function(dbServer,suffix)
 
                     for(rowIdx=0;rowIdx<BMXrows.length;rowIdx++)
                     {
-                        var curRow=BMXrows[rowIdx]
+                        var curRow=BMXrows[rowIdx];
                         
                         var entry;
                         if(curRow.seqn in entriesMap)
                         {
-                            entry=entriesMap[curRow.seqn]
+                            entry=entriesMap[curRow.seqn];
                         }
                         else
                         {
@@ -513,6 +513,73 @@ exports.NHANESData=function(dbServer,suffix)
         }); // End New Promise
     }
 
+
+    function objLabData(seqn)
+    {
+        this.seqn=seqn;
+        var self=this;
+        this.AddProperties=function(row)
+        {
+            for(var prop in row)
+            {
+                if((prop!=="seqn") && (prop!=="id"))
+                {
+                    self[prop]=row[prop];
+                }
+            }
+        }
+        return this;
+    }
+    this.lab_data=[];
+    this.load_lab_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var entriesMap={};
+            var tables=[];
+            tables.push({table_name:"alb_cr"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"thyrod"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"trigly"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"biopro"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"cbc"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"glu"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"ghb"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"mgx"+self.suffix,processFunction:"AddProperties"});
+
+            var load_table_data=function(tableInfo,next)
+            {
+                var selectSQL="SELECT * FROM "+tableInfo.table_name;
+                
+                self.dbConn.query(selectSQL,[],function(err,rows)
+                {
+                    for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                    {
+                        var curRow=rows[rowIdx]
+                        
+                        var entry;
+                        if(curRow.seqn in entriesMap)
+                        {
+                            entry=entriesMap[curRow.seqn];
+                        }
+                        else
+                        {
+                            entry=new objLabData(curRow.seqn);
+                            entriesMap[curRow.seqn]=entry;
+                            self.lab_data.push(entry);
+                        }
+                        entry[tableInfo.processFunction](curRow);
+                    }
+                    next();
+                });
+            }; // End load_table_data
+            asyncLoop(tables,load_table_data,function()
+            {
+                
+                resolve(self);            
+            });
+        
+        }); // End New Promise
+    }
     return this;
 
 }
