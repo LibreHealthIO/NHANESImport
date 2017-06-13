@@ -540,6 +540,8 @@ exports.NHANESData=function(dbServer,suffix)
             tables.push({table_name:"alb_cr"+self.suffix,processFunction:"AddProperties"});
             tables.push({table_name:"thyrod"+self.suffix,processFunction:"AddProperties"});
             tables.push({table_name:"trigly"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"tchol"+self.suffix,processFunction:"AddProperties"});
+            tables.push({table_name:"hdl"+self.suffix,processFunction:"AddProperties"});
             tables.push({table_name:"biopro"+self.suffix,processFunction:"AddProperties"});
             tables.push({table_name:"cbc"+self.suffix,processFunction:"AddProperties"});
             tables.push({table_name:"glu"+self.suffix,processFunction:"AddProperties"});
@@ -549,7 +551,7 @@ exports.NHANESData=function(dbServer,suffix)
             var load_table_data=function(tableInfo,next)
             {
                 var selectSQL="SELECT * FROM "+tableInfo.table_name;
-                
+//                selectSQL += " LIMIT 1 "
                 self.dbConn.query(selectSQL,[],function(err,rows)
                 {
                     for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
