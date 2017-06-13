@@ -11,6 +11,40 @@ var cheerio = require('cheerio');
 
 var exports=module.exports ={};
 
+var labDataMap={};
+function addLabDataMapEntry(description,NHANESVariable,units,range)
+{
+    var entry={
+        units:units
+        ,ranges: range
+        ,variable:NHANESVariable
+    };
+    labDataMap[description]=entry;
+}
+function rangeData(low,high)
+{
+    this.low=low;
+    this.high=high;
+    return this;
+}
+addLabDataMapEntry("TSH","lbxtsh1","uIU/ml",{normal:new rangeData(0.5,5)});
+addLabDataMapEntry("Creatinine","lbxscr","mg/dL",{normal:new rangeData(0.8,1.3)});
+addLabDataMapEntry("BUN","lbxsbu","mg/dL",{normal:new rangeData(8,21)});
+addLabDataMapEntry("Urine Albumin/Creatinine Ratio","urdact","mg/g",{male: new rangeData(0,17),female:new rangeData(0,25), microalbuminuria: new rangeData(30,300), macroalbuminuria: new rangeData(300,9999999)});
+addLabDataMapEntry("HDL","lbdhdd","mg/dL",{normal:new rangeData(40,80)});
+addLabDataMapEntry("LDL","lbdldl","mg/dL",{normal:new rangeData(85,125)});
+addLabDataMapEntry("Trigylcerides","lbxtr","mg/dL",{normal:new rangeData(50,150)});
+addLabDataMapEntry("Total Cholesterol","lbxtc","mg/dL",{normal:new rangeData(0,200)});
+addLabDataMapEntry("WBC","lbxwbcsi","1000 cells/uL",{normal:new rangeData(4,10)});
+addLabDataMapEntry("Hemoglobin","lbxhgb","g/dL",{male: new rangeData(13,17),female:new rangeData(12,15)});
+addLabDataMapEntry("Hematocrit","lbxhct","%",{male: new rangeData(40,52),female:new rangeData(36,47)});
+addLabDataMapEntry("Platelet Count","lbxpltsi","1000 cells/uL",{normal:new rangeData(150,400)});
+addLabDataMapEntry("Glycohemoglobin","lbxgh","%",{normal:new rangeData(0,6.5)});
+addLabDataMapEntry("Fasting Blood Glucose","lbxglu","mg/dL",{normal:new rangeData(65,110)});
+addLabDataMapEntry("Fasting Blood Insulin","lbxin","uU/mL",{normal:new rangeData(0,25)});
+addLabDataMapEntry("Combined Grip Strength","mgdcgsz","kg",{none:new rangeData(0,0)});
+
+
 exports.EHRConnection =  function(serverData)
 {
     this.server_name=serverData.server_name;
@@ -152,9 +186,14 @@ exports.EHRConnection =  function(serverData)
                             var EncounterInfoString=patientInfo.substring(EncounterInfoPos);
                             const DOB_Begin=" DOB: ";
                             const DOB_End=" Age:"
+                            const Gender_Begin="var patientGender='";
                             var DOBStartPos=patientInfo.indexOf(DOB_Begin);
                             var DOBFinishPos=patientInfo.indexOf(DOB_End);
                             var DOB_String=patientInfo.substring(DOBStartPos+DOB_Begin.length,DOBFinishPos);
+                            var GenderStartPos=patientInfo.indexOf(Gender_Begin);
+                            var GenderEndPos=patientInfo.indexOf("';",GenderStartPos);
+                            var GenderString=patientInfo.substring(GenderStartPos+Gender_Begin.length,GenderEndPos);
+                            self.Gender=GenderString;
                             self.DOB=DOB_String;
                             self.DOBParts=DOB_String.split("-");
                             eval(EncounterInfoString);
@@ -389,25 +428,177 @@ exports.EHRConnection =  function(serverData)
     
     this.createLabOrder = function()
     {
-        var form_data=
-            {
-                form_provider_id:"1"
-                ,form_lab_id:"1"
-                ,form_date_ordered: "2016-12-31"
-                ,form_date_collected:" 2016-12-31+00:00"
-                ,form_order_priority:""
-                ,form_order_status:""
-                ,form_clinical_hx:""
-                ,form_patient_instructions:""
-                ,"form_proc_order_title[0]":"Procedure"
-                ,"form_proc_type_desc[0]":"NHANES Lab Panel"
-                ,"form_proc_type[0]":"1"
-                ,"form_proc_type_diag[0]":""
-                ,procedure_type_names:"procedure"
-                ,bn_save:"Save"
-                
-                
-            }
+        return new Promise(function (resolve,reject)
+        {
+            var createLabOrderURL=self.server_name+"/interface/patient_file/encounter/load_form.php?formname=procedure_order";
+            var form_data=
+                {
+                    form_provider_id:"1"
+                    ,form_lab_id:"1"
+                    ,form_date_ordered: "2016-12-31"
+                    ,form_date_collected:" 2016-12-31+00:00"
+                    ,form_order_priority:""
+                    ,form_order_status:""
+                    ,form_clinical_hx:""
+                    ,form_patient_instructions:""
+                    ,"form_proc_order_title[0]":"Procedure"
+                    ,"form_proc_type_desc[0]":"NHANES Lab Panel"
+                    ,"form_proc_type[0]":"1"
+                    ,"form_proc_type_diag[0]":""
+                    ,procedure_type_names:"procedure"
+                    ,bn_save:"Save"
+                }
+            request({
+                        url:createLabOrderURL
+                        ,jar: true
+                        ,method: "POST"
+                        ,formData: form_data
+                    },
+                    function(err,req,body)
+                    {
+                        if(err)
+                        {
+                            console.log(err);
+                            reject(err);
+                        }
+                        else
+                        {
+                            console.log("Created Procedure");
+                            resolve(self);
+                        }
+
+                    }
+                    );
+            
+        });
+    };
+    
+
+    this.populateLabOrder = function(LabData)
+    {
+        return new Promise(function (resolve,reject)
+        {
+            var url=self.server_name+"/interface/orders/orders_results.php?review=1"
+            request({
+                        url:url
+                        ,jar: true
+                        ,method: "GET"
+                    },
+                    function(err,req,body)
+                    {
+                        if(err)
+                        {
+                            reject(err);
+                        }
+                        var $=cheerio.load(body);
+                        var form=$("form");
+                        var postURL=self.server_name+"/interface/orders/"+form.attr("action");
+                        var dataTable=form.find("table").eq(1);
+                        var firstRow=dataTable.find("tr.detail");
+                        var dataRows=dataTable.find("tr.detail[bgcolor='"+firstRow.attr('bgcolor')+"']");
+                        var labValuesFormData={
+                            "form_date_report[0]":"2016-12-31 00:00"
+                            ,"form_date_collected[0]":"2016-12-31 00:00"
+                            ,"form_report_status[0]":"review"
+                            ,"form_specimen_num[0]":""
+                            ,"form_submit":"Sign Results"
+                            
+                        };
+                        
+                        dataRows.each(function(idx,elem)
+                        {
+
+                            var curDataRow=dataRows.eq(idx);
+                            var label=curDataRow.find("input[name^='form_result_text']");
+                            var result=curDataRow.find("input[name^='form_result_result']");
+                            var units=curDataRow.find("input[name^='form_result_units']");
+                            var code=curDataRow.find("input[name^='form_result_code']");
+                            var abn=curDataRow.find("select[name^='form_result_abnormal']");
+                            var range=curDataRow.find("input[name^='form_result_range']");
+                            var form_line=curDataRow.find("input[name^='form_line']");
+                            
+
+                            var labelContent=label.attr("value");
+                            var normalRange=null;
+                            var mapEntry=labDataMap[labelContent];
+                            if(mapEntry.ranges.hasOwnProperty('normal'))
+                            {
+                                normalRange=mapEntry.ranges['normal'];
+                            }
+                            else if(mapEntry.ranges.hasOwnProperty('none'))
+                            {
+                                normalRange=null;
+                            }                            
+                            else
+                            {
+                                normalRange=mapEntry.ranges[self.Gender.toLowerCase()];
+                                // Otherwise male/female specific
+                            }
+                            var rangeString=""
+                            var NHANESresult=LabData[mapEntry.variable];
+                            var ResultStatus="";
+                            if(typeof(NHANESresult)==="undefined")
+                            {
+                                NHANESresult="";
+                            }
+                            if(normalRange!==null)
+                            {
+                                rangeString=normalRange.low + " - " +normalRange.high;
+
+                                if(NHANESresult!=="");
+                                {
+                                    if(NHANESresult<normalRange.low)
+                                    {
+                                        ResultStatus="low"
+                                    }
+                                    else if(NHANESresult>normalRange.high)
+                                    {
+                                        ResultStatus="high"
+                                    }
+                                    else
+                                    {
+                                        ResultStatus="no";
+                                    }
+                                }
+                            }
+                            console.log(labelContent+":"+JSON.stringify(normalRange));
+
+                            labValuesFormData[label.attr("name")]=labelContent;
+                            labValuesFormData[units.attr("name")]=mapEntry.units;
+                            labValuesFormData[result.attr("name")]=NHANESresult;
+                            labValuesFormData[code.attr("name")]=code.attr("value");
+                            labValuesFormData[abn.attr("name")]=ResultStatus;
+                            labValuesFormData[range.attr("name")]=rangeString;
+                            labValuesFormData[form_line.attr("name")]=form_line.attr("value");
+                            
+                        });
+                        for(var prop in labValuesFormData)
+                        {
+                            if(labValuesFormData[prop]===null)
+                            {
+                                labValuesFormData[prop]="";
+                            }
+                        }
+                        console.log(JSON.stringify(labValuesFormData));
+                        console.log(postURL);
+                        request({
+                                    url:postURL
+                                    ,jar: true
+                                    ,method: "POST"
+                                    ,formData: labValuesFormData
+                                    },
+                                    function(err,req,body){
+/*                                        if(err)
+                                        {
+                                            console.log(err);
+                                            rejest(err);
+                                        }
+                                        console.log(body);
+*/                                        resolve(self);
+                                    }
+                                ); // End POST request
+                    }); // End GET request
+        });
     };
     
     this.addLabDataListLoop = function(LabData,next)
@@ -415,7 +606,12 @@ exports.EHRConnection =  function(serverData)
         self.selectPatient(LabData.seqn).then(()=>{
             self.selectOrCreateEncounter().then(()=>{
                 console.log(LabData.seqn);
-                next();
+                    self.createLabOrder().then(()=>{
+                    self.populateLabOrder(LabData).then(()=>{
+                        next();                        
+                    });
+
+               });
             });// end select/CreateEncounter
         }).catch((err)=>{console.log(err); next();}); // end select patient
 
