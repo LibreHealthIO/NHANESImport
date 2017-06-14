@@ -237,6 +237,61 @@ function drugData(row)
     this.drugName=row['rxddrug'];
     this.drugCode=row['rxdrugid'];
 }
+
+    function insuranceRowToName(data)
+    {
+        if(data["hiq031a"]===14)
+        {
+            return "Private Insurance";
+        }
+        if(data["hiq031b"]===15)
+        {
+            return "Medicare";
+        }
+        if(data["hiq031c"]===16)
+        {
+            return "Medi-Gap";
+        }
+        if(data["hiq031d"]===17)
+        {
+            return "Medicaid";
+        }
+        if(data["hiq031e"]===18)
+        {
+            return "SCHIP";
+        }
+        if(data["hiq031f"]===19)
+        {
+            return "Military Health Care";
+        }
+        if(data["hiq031g"]===20)
+        {
+            return "Indian Health Service";
+        }
+        if(data["hiq031h"]===21)
+        {
+            return "State-Sponsored Health Plan";
+        }
+        if(data["hiq031i"]===22)
+        {
+            return "Other Government Insurance";
+        }        
+        if(data["hiq031j"]===23)
+        {
+            return "Single Service Plan";
+        }        
+        if(data["hiq031j"]===40)
+        {
+            return "Unassigned";
+        }        
+    }
+
+function insurance_data(row)
+{
+    this.seqn=row.seqn;
+    this.insurance_type=insuranceRowToName(row);
+    return this;
+}
 exports.NHANESData=function(dbServer,suffix)
 {
     this.dbConn=dbServer;
@@ -582,6 +637,31 @@ exports.NHANESData=function(dbServer,suffix)
         
         }); // End New Promise
     }
+
+    this.insurance_data=[];
+    this.load_insurance_data = function()
+    {
+        return new Promise(function(resolve,reject)
+            {
+                var selectSQL = " SELECT * FROM "+ "hiq"+self.suffix
+                self.dbConn.query(selectSQL,[],function(err,rows)
+                {
+                    if(err)
+                    {
+                        reject(err);
+                        return;
+                    }
+                    for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                    {
+                        var curRow=rows[rowIdx];
+                        self.insurance_data.push(new insurance_data(curRow));
+                    }
+                    resolve(self);
+                });
+            }
+        );
+    }
+
     return this;
 
 }

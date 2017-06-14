@@ -162,7 +162,7 @@ exports.EHRConnection =  function(serverData)
                     var id=$(".oneresult");
                     if(id.length===0)
                     {
-                        reject("Unable to find id for SEQN:"+seqn);
+                        reject(patient_search_url+"\n"+"Unable to find id for SEQN:"+seqn);
                     }
                     pid=id.attr("id");
                     self.pid=pid;
@@ -615,6 +615,109 @@ exports.EHRConnection =  function(serverData)
             });// end select/CreateEncounter
         }).catch((err)=>{console.log(err); next();}); // end select patient
 
+    };
+    
+    this.getDemographicsFull = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var DemoFullURL=self.server_name+"/interface/patient_file/summary/demographics_full.php";
+            request({
+                                    url:DemoFullURL
+                                    ,jar: true
+                                    ,method: "GET"
+            },
+            function(err,req,body)
+            {
+                if(err)
+                {
+                    reject(err);
+                    return;
+                }
+                var $=cheerio.load(body);
+                resolve($);
+            });
+        });
     }
+    
+    this.setDemoInfo=function(DemoInfo,$)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var form=$("form");
+            var postData={};
+            var formArray=form.serializeArray();
+            for(var inputIdx=0;inputIdx<formArray.length;inputIdx++)
+            {
+                var input=formArray[inputIdx];
+                postData[input.name]=input.value;
+            }
+            
+            for(var demoInfoIdx=0;demoInfoIdx<DemoInfo.length;demoInfoIdx++)
+            {
+                var curInfo=DemoInfo[demoInfoIdx];
+                var elemSelector=curInfo.type+"[name=\""+curInfo.name+"\"]";
+                var element=form.find(elemSelector);
+                var formValue="";
+                if(curInfo.type==="select")
+                {
+                    var options=element.find("option")
+                    options.each(function(idx,elem)
+                    {
+                        var tag=options.eq(idx);
+                                
+                        if(tag.text().indexOf(curInfo.value)===0)
+                        {
+                            formValue=tag.attr("value");
+                        }
+                    })
+                }
+                else
+                {
+                    
+                }
+                postData[curInfo.name]=formValue;
+            }
+
+            
+            request(
+                    {
+                        url:self.server_name+"/interface/patient_file/summary/demographics_save.php"
+                        ,jar: true
+                        ,method: "POST"
+                        ,formData: postData
+                    },
+                function(err,req,body)
+                {
+                    resolve(self);
+  
+                }
+            );
+        });
+    };
+    this.addInsuranceInfo = function(data,next)
+    {
+        var DemoInfo=[
+            {name: "i0provider", type: "select", value: data.insurance_type}
+        ];
+        console.log(JSON.stringify(data));
+        self.selectPatient(data.seqn)
+                .then(()=>{return self.getDemographicsFull();})
+                .then(($)=>{return self.setDemoInfo(DemoInfo,$);})
+                .then(()=>{ next();})
+                .catch((err)=>{console.log(err);next()});
+    };
+    
+    this.addInsuranceDataLoop = function(InsuranceData)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            asyncLoop(InsuranceData
+                        ,self.addInsuranceInfo
+                        ,function(){console.log("Done");});
+            
+        });
+    };
+    
     return this;
 };

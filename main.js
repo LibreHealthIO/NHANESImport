@@ -358,4 +358,5 @@ select distinct source from `variables` WHERE variable in ('RIAGENDR','RIDAGEYR'
 
 //loadCSVfile(2011,"TRIGLY_G.csv");
 //loadCSVfile(2011,"TCHOL_G.csv");
-loadCSVfile(2011,"HDL_G.csv");
+//loadCSVfile(2011,"HDL_G.csv");
+loadCSVfile(2011,"HIQ_G.csv");
