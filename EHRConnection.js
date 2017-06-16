@@ -672,9 +672,9 @@ exports.EHRConnection =  function(serverData)
                         }
                     })
                 }
-                else
+                else if(curInfo.type==="input")
                 {
-                    
+                    formValue=curInfo.value;
                 }
                 postData[curInfo.name]=formValue;
             }
@@ -714,10 +714,35 @@ exports.EHRConnection =  function(serverData)
         {
             asyncLoop(InsuranceData
                         ,self.addInsuranceInfo
-                        ,function(){console.log("Done");});
+                        ,function(){console.log("Done");resolve(self);});
             
         });
     };
     
+    this.updateDemographics=function(data,next)
+    {
+        var DemoInfo=[
+            {name: "form_monthly_income",type:"input", value:data.monthly_income }
+            ,{name: "form_ethnicity",type:"select", value:data.race }
+            
+        ]
+        console.log(JSON.stringify(DemoInfo));
+        self.selectPatient(data.seqn)
+            .then(()=>{return self.getDemographicsFull();})
+            .then(($)=>{return self.setDemoInfo(DemoInfo,$);})
+            .then(()=>{ next();})
+            .catch((err)=>{console.log(err);next()});
+    }
+    
+    this.updateDemographicsLoop = function(Data)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            asyncLoop(Data
+                        ,self.updateDemographics
+                        ,function(){console.log("Done");resolve(self);});
+            
+        });
+    };
     return this;
 };

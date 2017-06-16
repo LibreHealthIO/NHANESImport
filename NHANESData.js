@@ -11,6 +11,20 @@ var names = require('./NamesData.js');
 
 var exports=module.exports ={};
 
+function getRace(demo_row)
+{
+    var raceMap={};
+    raceMap[1]="Mexican American";
+    raceMap[2]="Other Hispanic";
+    raceMap[3]="Non-Hispanic White";
+    raceMap[4]="Non-Hispanic Black";
+    raceMap[6]="Non-Hispanic Asian";
+    raceMap[7]="Other Race - Including Multi-Racial";
+    if(raceMap.hasOwnProperty(demo_row.ridreth3))
+    {
+        return raceMap[demo_row.ridreth3];
+    }
+}
 function PatientData(demo_row)
 {
     this.seqn=demo_row.seqn;
@@ -71,7 +85,81 @@ function PatientData(demo_row)
     {
         this.marital_status="";
     }
-    
+    if(demo_row.indfmin2===1)
+    {
+        // Annual 0-4999
+        this.monthly_income=300;
+    }
+    else if(demo_row.indfmin2===2)
+    {
+        // Annual 5000-10000
+        this.monthly_income=800;
+    }
+    else if(demo_row.indfmin2===3)
+    {
+        // Annual 10000-14999
+        this.monthly_income=1000;
+    }
+    else if(demo_row.indfmin2===4)
+    {
+        // Annual 15000-19999
+        this.monthly_income=1600;
+    }
+    else if(demo_row.indfmin2===5)
+    {
+        // Annual 20000-24999
+        this.monthly_income=2000;
+    }
+    else if(demo_row.indfmin2===6)
+    {
+        // Annual 250000-34999
+        this.monthly_income=2500;
+    }
+    else if(demo_row.indfmin2===7)
+    {
+        // Annual 350000-44999
+        this.monthly_income=3500;
+    }
+    else if(demo_row.indfmin2===8)
+    {
+        // Annual 450000-54999
+        this.monthly_income=4500;
+    }    
+    else if(demo_row.indfmin2===9)
+    {
+        // Annual 550000-64999
+        this.monthly_income=5400;
+    }
+    else if(demo_row.indfmin2===10)
+    {
+        // Annual 650000-74999
+        this.monthly_income=6200;
+    }        
+    else if(demo_row.indfmin2===12)
+    {
+        // Annual 20000+
+        this.monthly_income=1700;
+    }        
+    else if(demo_row.indfmin2===13)
+    {
+        // Annual <20000
+        this.monthly_income=1500;
+    }
+    else if(demo_row.indfmin2===14)
+    {
+        // Annual 750000-99999
+        this.monthly_income=8200;
+    }        
+    else if(demo_row.indfmin2===15)
+    {
+        // Annual 100000+
+        this.monthly_income=9000;
+    }
+    else
+    {
+        this.monthly_income="";
+    }
+    this.race=getRace(demo_row);
     var name=names.generateName(this.seqn, this.age ,this.sex);
     this.fname=name.fname;
     this.lname=name.lname;
