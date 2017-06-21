@@ -749,7 +749,37 @@ exports.NHANESData=function(dbServer,suffix)
             }
         );
     }
+    
+    this.load_social_table=function(table,constructor)
+    {
+        return new Promise(function(resolve,reject)
+        {
+                var selectSQL = " SELECT * FROM "+ table+self.suffix
+                self.dbConn.query(selectSQL,[],function(err,rows)
+                {
+                    if(err)
+                    {
+                        reject(err);
+                        return;
+                    }
+                    for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
+                    {
+                    }
+                    resolve(self);
+                });
+        });// End New Promise
+        
+    }
 
+    this.load_social_data = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            this.social_data=[];
+            this.social_map={};
+            
+        });// End New Promise
+    }
     return this;
 
 }
