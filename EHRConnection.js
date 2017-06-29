@@ -79,6 +79,7 @@ exports.EHRConnection =  function(serverData)
                             console.log(err);
                             reject(err)
                         }
+                        console.log("EHR Login completed");
                         resolve(body);
                     });            
         });
@@ -744,5 +745,175 @@ exports.EHRConnection =  function(serverData)
             
         });
     };
+
+    this.getHistoryFull = function()
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var DemoFullURL=self.server_name+"/interface/patient_file/history/history_full.php";
+            request({
+                                    url:DemoFullURL
+                                    ,jar: true
+                                    ,method: "GET"
+            },
+            function(err,req,body)
+            {
+                if(err)
+                {
+                    reject(err);
+                    return;
+                }
+                var $=cheerio.load(body);
+                resolve($);
+            });
+        });
+        
+    }
+    
+    this.updateHistoryInfo=function(HistoryInfo,$)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            var form=$("form");
+            var postData={};
+            var formArray=form.serializeArray();
+            for(var inputIdx=0;inputIdx<formArray.length;inputIdx++)
+            {
+                var input=formArray[inputIdx];
+                postData[input.name]=input.value;
+            }
+            console.log(JSON.stringify(HistoryInfo));
+            for(var Idx=0;Idx<HistoryInfo.length;Idx++)
+            {
+                var curInfo=HistoryInfo[Idx];
+                var elemSelector=curInfo.type+"[name=\""+curInfo.name+"\"]";
+                var element=form.find(elemSelector);
+                var formValue="";
+                if(curInfo.type==="select")
+                {
+                    var options=element.find("option")
+                    options.each(function(idx,elem)
+                    {
+                        var tag=options.eq(idx);
+                                
+                        if(tag.text().indexOf(curInfo.value)===0)
+                        {
+                            formValue=tag.attr("value");
+                        }
+                    })
+                    console.log(formValue);
+                }
+                else if(curInfo.type==="input")
+                {
+                    formValue=curInfo.value;
+                }
+                postData[curInfo.name]=formValue;
+            }
+            
+            request(
+                    {
+                        url:self.server_name+"/interface/patient_file/history/history_save.php"
+                        ,jar: true
+                        ,method: "POST"
+                        ,formData: postData
+                    },
+                function(err,req,body)
+                {
+                    resolve(self);
+  
+                }
+            );
+        });
+    };
+    this.updateSocial=function(data,next)
+    {
+        var HistoryInfo=[];
+        console.log(data.seqn)
+        if(data.hasOwnProperty("smoking"))
+        {
+            HistoryInfo.push({name: "form_tobacco",type:"select", value:data.smoking });        
+        }
+        if(data.hasOwnProperty("recreational_drugs"))
+        {
+            if(data.recreational_drugs.length>0)
+            {
+                HistoryInfo.push({name: "form_recreational_drugs",type:"input", value:data.recreational_drugs.join() });        
+            }
+        }
+        if(data.hasOwnProperty("alcohol"))
+        {
+            var alcohol=data.alcohol;
+            if(data.hasOwnProperty("alcoholPerDay"))
+            {
+                alcohol+=","+data.alcoholPerDay + " drinks per day";
+            }
+            HistoryInfo.push({name: "form_alcohol",type:"input", value:alcohol });        
+        }
+        var exercise_patterns=null;
+        if(data.hasOwnProperty("daysActive"))
+        {
+            exercise_patterns=data.daysActive + " days active per week";            
+        }
+        if(data.hasOwnProperty("daysVigorousActiveWork"))
+        {
+            if(exercise_patterns===null)
+            {
+                exercise_patterns="";
+            }
+            else
+            {
+                exercise_patterns+=",";
+            }
+            exercise_patterns+=data.daysVigorousActiveWork + " days per week of vigorous work activity";            
+        }
+        if(data.hasOwnProperty("daysModerateActiveWork"))
+        {
+            if(exercise_patterns===null)
+            {
+                exercise_patterns="";
+            }
+            else
+            {
+                exercise_patterns+=",";
+            }
+            exercise_patterns+=data.daysModerateActiveWork + " days per week of moderate work activity";            
+        }
+        if(data.hasOwnProperty("minutesSedentary"))
+        {
+            if(exercise_patterns===null)
+            {
+                exercise_patterns="";
+            }
+            else
+            {
+                exercise_patterns+=",";
+            }
+            exercise_patterns+=data.minutesSedentary + " minutes sedentary per day";            
+        }
+        
+        
+        if(exercise_patterns!==null)
+        {
+            HistoryInfo.push({name: "form_exercise_patterns",type:"input", value:exercise_patterns });        
+        }
+        self.selectPatient(data.seqn)
+            .then(()=>{return self.getHistoryFull()})
+            .then(($)=>{return self.updateHistoryInfo(HistoryInfo,$);})
+            .then(()=>{ next();})
+            .catch((err)=>{console.log(err);next()});
+        
+    }
+    this.updateSocialLoop = function(Data)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            console.log(JSON.stringify(Data));
+            asyncLoop(Data
+                        ,self.updateSocial
+                        ,function(){console.log("Done");resolve(self);});
+            
+        });
+        
+    }
     return this;
 };

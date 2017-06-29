@@ -750,7 +750,13 @@ exports.NHANESData=function(dbServer,suffix)
         );
     }
     
-    this.load_social_table=function(table,constructor)
+    this.socialObj = function (seqn)
+    {
+        this.seqn=seqn;
+        return this;
+    }
+    
+    this.load_social_table=function(table,setEntries)
     {
         return new Promise(function(resolve,reject)
         {
@@ -764,6 +770,21 @@ exports.NHANESData=function(dbServer,suffix)
                     }
                     for(var rowIdx=0;rowIdx<rows.length;rowIdx++)
                     {
+                        var curRow=rows[rowIdx];
+                        var curObj=null;
+                        if(self.social_map.hasOwnProperty(curRow.seqn))
+                        {
+                            console.log("found existing?");
+                            curObj=self.social_map[curRow.seqn];
+                        }
+                        else
+                        {
+                            console.log("Creating new");
+                            curObj=new self.socialObj(curRow.seqn);
+                            self.social_map[curRow.seqn]=curObj;
+                            self.social_data.push(curObj);
+                        }
+                        setEntries(curObj,curRow);
                     }
                     resolve(self);
                 });
@@ -771,17 +792,136 @@ exports.NHANESData=function(dbServer,suffix)
         
     }
 
+
+    function smokingSocial(obj,row)
+    {
+        
+        if(row.smq020===2)
+        {
+            obj.smoking="Never smoker";
+        }
+        else if(row.smq020===1)
+        {
+            if(row.smq040===1)
+            {
+                obj.smoking="Current every day smoker";
+            } 
+            else if(row.smq040===2)
+            {
+                obj.smoking="Current some day smoker";
+            }
+            else if(row.smq040===3)
+            {
+                obj.smoking="Former smoker";
+            }
+            else
+            {
+                obj.smoking="Smoker,current status unknown";
+            }
+        }
+        else
+        {
+            obj.smoking="Unknown if ever smoked";
+        }
+    }
+    function drugUseSocial(obj,row)
+    {
+        obj.recreational_drugs=[];
+        if(row.duq200===1)
+        {
+            obj.recreational_drugs.push("marijuana");
+        }
+        if(row.duq240===1)
+        {
+            if(row.duq250===1)
+            {
+                obj.recreational_drugs.push("cocaine");
+            }
+            if(row.duq290===1)
+            {
+                obj.recreational_drugs.push("heroin");
+            }
+            if(row.duq330===1)
+            {
+                obj.recreational_drugs.push("methamphetamine");
+            }
+        }
+        
+    }
+    function physicalActivitySocial(obj,row)
+    {
+        if((row.paq706!==null) &&(row.paq706>=0) &&(row.paq706<=7))
+        {
+            obj.daysActive=row.paq706;
+        }
+        if((row.paq610>=1) && (row.paq610<=7))
+        {
+            obj.daysVigorousActiveWork=row.paq610;
+        }
+        if((row.paq625!==null) &&(row.paq625>=1) && (row.paq625<=7))
+        {
+            obj.daysModerateActiveWork=row.paq625;
+        }
+        if((row.pad680!==null) && (row.pad680>=0) && (row.pad680<1440))
+        {
+            obj.minutesSedentary=row.pad680;
+        }
+    }
+    function alcoholSocial(obj,row)
+    {
+        if(row.alq101===2)
+        {
+            if(row.alq110===2)
+            {
+                obj.alcohol="Never";
+                return;
+            }
+            obj.alcohol="Rarely";
+        }
+        if(row.alq120q!==null)
+        {
+            if((row.alq120q!==777) && row.alq120q!==999)
+            {
+                obj.alcohol= row.alq120q +" days";
+                if(row.alq120u===1)
+                {
+                    obj.alcohol+= "/week";
+                }
+                else if(row.alq120u===2)
+                {
+                    obj.alcohol+= "/month";
+                }
+                else if(row.alq120u===3)
+                {
+                    obj.alcohol+= "/year";
+                }
+
+            }
+        }
+        if(row.alq130!==null)
+        {
+            if((row.alq130!==777) && (row.alq130!==999))
+            {
+                obj.alcoholPerDay=row.alq130;
+            }
+        }
+    }
     this.load_social_data = function()
     {
         return new Promise(function(resolve,reject)
         {
-            this.social_data=[];
-            this.social_map={};
+            self.social_data=[];
+            self.social_map={};
+            self.load_social_table("smq",smokingSocial)
+                    .then(()=>{return self.load_social_table("duq",drugUseSocial);})
+                    .then(()=>{return self.load_social_table("paq",physicalActivitySocial);})
+                    .then(()=>{return self.load_social_table("alq",alcoholSocial);})
+                    .then(()=>{resolve(self);});
             
         });// End New Promise
-    }
+    };
     return this;
 
-}
+};
 
 

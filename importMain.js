@@ -124,6 +124,32 @@ function loadLab_Data()
                 });
     });
 }
+
+function loadInsurance_Data()
+{
+    NHANESconn.load_insurance_data()
+                .then(()=>{return EHRconn.login();})
+                .then(()=>{return EHRconn.addInsuranceDataLoop(NHANESconn.insurance_data);});
+
+    
+}
+
+function updateDemographics()
+{
+    NHANESconn.load_demographics()
+            .then(()=>{return EHRconn.login();})
+            .then(()=>{return EHRconn.updateDemographicsLoop(NHANESconn.patient_list);});
+  
+}
+
+function updateSocialData()
+{
+    NHANESconn.load_social_data()
+            .then(()=>{return EHRconn.login();})
+            .then(()=>{return EHRconn.updateSocialLoop(NHANESconn.social_data);});
+//            .then(()=>{return EHRconn.updateDemographicsLoop(NHANESconn.patient_list);});
+  
+}
 //loadMCQProblemData();
 //loadBPQProblemData();
 
@@ -131,4 +157,7 @@ function loadLab_Data()
 //loadKIQ_UProblemData();
 //loadRXQ_RX_Data();
 //createPatients();
-loadLab_Data();
+//loadLab_Data();
+//loadInsurance_Data();
+//updateDemographics();
+updateSocialData();
