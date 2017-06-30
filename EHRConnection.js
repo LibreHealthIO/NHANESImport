@@ -542,11 +542,15 @@ exports.EHRConnection =  function(serverData)
                             {
                                 NHANESresult="";
                             }
+                            if(NHANESresult===null)
+                            {
+                                NHANESresult="";
+                            }
                             if(normalRange!==null)
                             {
                                 rangeString=normalRange.low + " - " +normalRange.high;
 
-                                if(NHANESresult!=="");
+                                if((NHANESresult!==""))
                                 {
                                     if(NHANESresult<normalRange.low)
                                     {
