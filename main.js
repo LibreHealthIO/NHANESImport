@@ -262,7 +262,15 @@ function dropAndCreateTable(tablename,records)
             columnsCreate+= column + " " + "varchar(255) ";
             insertColumnDefs+=", "+column;
             colParams+=", ?";
-        }        
+        }
+        else if((column==="smd100br") || (column==="smdupca"))
+        {
+            // use string from cigarate UPC or Brand
+            columnsCreate+= ",\n";
+            columnsCreate+= column + " " + "varchar(255) ";
+            insertColumnDefs+=", "+column;
+            colParams+=", ?";            
+        }
         else
         {
             columnsCreate+= ",\n";
@@ -293,7 +301,7 @@ function dropAndCreateTable(tablename,records)
             for(var colIdx=0;colIdx<columns.length;colIdx++)
             {
                 var curValue=curRecord[columns[colIdx]];
-                if(curValue==='NA')
+                if((curValue==='NA') ||(curValue===""))
                 {
                     parameters.push(null);                    
                 }
@@ -349,7 +357,8 @@ select distinct source from `variables` WHERE variable in ('RIAGENDR','RIDAGEYR'
 //loadCSVfile(2011,"DIQ_G.csv");
 //loadCSVfile(2011,"KIQ_U_G.csv");
 //loadCSVfile(2011,"RXQ_RX_G.csv");
-//loadCSVfile(2011,"THYROD_G.csv");
+//loadCSVfile(20
+//11,"THYROD_G.csv");
 //loadCSVfile(2011,"CBC_G.csv");
 //loadCSVfile(2011,"BIOPRO_G.csv");
 //loadCSVfile(2011,"GLU_G.csv");
@@ -359,4 +368,10 @@ select distinct source from `variables` WHERE variable in ('RIAGENDR','RIDAGEYR'
 //loadCSVfile(2011,"TRIGLY_G.csv");
 //loadCSVfile(2011,"TCHOL_G.csv");
 //loadCSVfile(2011,"HDL_G.csv");
-loadCSVfile(2011,"HIQ_G.csv");
+//loadCSVfile(2011,"HIQ_G.csv");
+//loadCSVfile(2011,"PAQ_G.csv");
+//loadCSVfile(2011,"DUQ_G.csv");
+//loadCSVfile(2011,"SMQ_G.csv");
+//loadCSVfile(2011,"ALQ_G.csv");
+
+getNHANES(2009);

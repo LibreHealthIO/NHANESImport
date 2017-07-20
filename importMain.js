@@ -12,7 +12,7 @@ var asyncLoop = require('node-async-loop');
 var cheerio = require('cheerio');
 
 var serverData={
-    server_name: 'http://192.168.249.128/nhanes'
+    server_name: 'http://192.168.249.128/openemr'
     ,userid: 'admin'
     ,password: 'password'
 }
@@ -150,14 +150,14 @@ function updateSocialData()
 //            .then(()=>{return EHRconn.updateDemographicsLoop(NHANESconn.patient_list);});
   
 }
+
+//createPatients();
 //loadMCQProblemData();
 //loadBPQProblemData();
-
 //loadDIQProblemData();
 //loadKIQ_UProblemData();
-//loadRXQ_RX_Data();
-//createPatients();
+loadRXQ_RX_Data();
 //loadLab_Data();
 //loadInsurance_Data();
 //updateDemographics();
-updateSocialData();
+//updateSocialData();
