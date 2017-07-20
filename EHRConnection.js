@@ -120,7 +120,7 @@ exports.EHRConnection =  function(serverData)
                                 ,form_lname:patient.lname
                                 ,form_sex:patient.sex
                                 ,form_DOB:DOBString
-                                ,form_pubpid:'pubpid123'
+                                ,form_pubpid: patient.seqn
                                 ,form_ss: patient.seqn
                                 ,form_status: patient.marital_status
 
@@ -730,14 +730,14 @@ exports.EHRConnection =  function(serverData)
             {name: "form_monthly_income",type:"input", value:data.monthly_income }
             ,{name: "form_ethnicity",type:"select", value:data.race }
             
-        ]
-        console.log(JSON.stringify(DemoInfo));
+        ];
+        console.log(JSON.stringify(data.seqn));
         self.selectPatient(data.seqn)
             .then(()=>{return self.getDemographicsFull();})
             .then(($)=>{return self.setDemoInfo(DemoInfo,$);})
             .then(()=>{ next();})
-            .catch((err)=>{console.log(err);next()});
-    }
+            .catch((err)=>{console.log(err);next();});
+    };
     
     this.updateDemographicsLoop = function(Data)
     {
