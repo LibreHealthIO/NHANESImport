@@ -226,6 +226,20 @@ exports.EHRConnection =  function(serverData)
             ,form_title:ProblemEntry.description
             ,form_diagnosis:"ICD10:"+ProblemEntry.code
             ,form_save:'Save'
+            
+        }
+        if(ProblemEntry.ageOfDiagnosis!==null)
+        {
+            var startYear;
+            var startDate;
+            console.log(JSON.stringify(self.DOBParts));
+            startYear=parseInt(self.DOBParts[0])+ProblemEntry.ageOfDiagnosis;
+            startDate=startYear.toString()+"-"+self.DOBParts[1]+"-"+self.DOBParts[2];
+            form_data.form_begin=startDate;
+        }
+        if(ProblemEntry.active===false)
+        {
+            form_data.form_end="12-31-2016";
         }
         console.log(self.pid+":"+ProblemEntry.description);
         request({

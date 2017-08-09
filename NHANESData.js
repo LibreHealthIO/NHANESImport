@@ -165,74 +165,130 @@ function PatientData(demo_row)
     this.lname=name.lname;
     return this;
 }
-function problemEntry(code,description,NHANESQuestion)
+function problemEntry(code,description,NHANESQuestion,ageInfo,stillHave)
 {
     this.code=code;
     this.description=description;
+    this.ageInfo=ageInfo;
+    this.stillHave=stillHave;
     return this;
 }
 
 var problemMap={};
-function addProblemMap(NHANESCode,ICDCode,Description,NHANESQuestion)
+function addProblemMap(NHANESCode,ICDCode,Description,NHANESQuestion,ageInfo,stillHave=null)
 {
-    problemMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANESQuestion);
+    problemMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANESQuestion,ageInfo,stillHave);
 }
-addProblemMap('mcq010',"J45.20","Mild intermittent asthma, uncomplicated","Ever been told you have asthma");
-addProblemMap('mcq160a',"M19.90","Unspecified osteoarthritis, unspecified site","Doctor ever said you had arthritis");
-addProblemMap('mcq160b',"I50.9 ","Heart failure, unspecified","Ever told had congestive heart failure");
-addProblemMap('mcq160c',"I25.9 ","Chronic ischemic heart disease, unspecified","Ever told you had coronary heart disease");
-addProblemMap('mcq160d',"I20.9 ","Angina pectoris, unspecified","Ever told you had angina/angina pectoris");
-addProblemMap('mcq160e',"I25.2","Old myocardial infarction","Ever told you had heart attack");
-addProblemMap('mcq160f',"I63.9","Cerebral infarction, unspecified","Ever told you had a stroke");
-addProblemMap('mcq160g',"J43.9","Emphysema, unspecified","Ever told you had emphysema");
-addProblemMap('mcq160k',"J42","Unspecified chronic bronchitis","Ever told you had chronic bronchitis");
-addProblemMap('mcq160l',"K76.9","Liver disease, unspecified","Ever told you had any liver condition");
-addProblemMap('mcq160m',"E07.9","Disorder of thyroid, unspecified","Ever told you had thyroid problem");
-addProblemMap('mcq160n',"M10.9","Gout, unspecified","Doctor ever told you that you had gout?");
+addProblemMap('mcq010',"J45.20","Mild intermittent asthma, uncomplicated","Ever been told you have asthma",'mcq025','mcq035');
+addProblemMap('mcq160b',"I50.9 ","Heart failure, unspecified","Ever told had congestive heart failure",'mcq180b');
+addProblemMap('mcq160c',"I25.9 ","Chronic ischemic heart disease, unspecified","Ever told you had coronary heart disease",'mcq180c');
+addProblemMap('mcq160d',"I20.9 ","Angina pectoris, unspecified","Ever told you had angina/angina pectoris",'mcq180d');
+addProblemMap('mcq160e',"I25.2","Old myocardial infarction","Ever told you had heart attack",'mcq180e');
+addProblemMap('mcq160f',"I63.9","Cerebral infarction, unspecified","Ever told you had a stroke",'mcq180f');
+addProblemMap('mcq160g',"J43.9","Emphysema, unspecified","Ever told you had emphysema",'mcq180g');
+addProblemMap('mcq160k',"J42","Unspecified chronic bronchitis","Ever told you had chronic bronchitis",'mcq180k','mcq170k');
+addProblemMap('mcq160l',"K76.9","Liver disease, unspecified","Ever told you had any liver condition",'mcq180l','mcq170l');
+addProblemMap('mcq160m',"E07.9","Disorder of thyroid, unspecified","Ever told you had thyroid problem",'mcq180m','mcq170m');
+addProblemMap('mcq160n',"M10.9","Gout, unspecified","Doctor ever told you that you had gout?",'mcq180n');
+
+
+
 
 var cancerMap={};
-function addCancerMap(NHANESCode,ICDCode,Description,NHANES)
+function addCancerMap(NHANESCode,ICDCode,Description,NHANES,ageInfo)
 {
-    cancerMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANES);
+    cancerMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANES,ageInfo);
 }
-addCancerMap(10,"C67.9","Malignant neoplasm of bladder, unspecified","Bladder");
-addCancerMap(11,"C96.9","Other and unspecified malignant neoplasms of lymphoid, hematopoietic and related tissue","Blood");
-addCancerMap(12,"C41.9","Malignant neoplasm of bone and articular cartilage, unspecified","Bone");
-addCancerMap(13,"C71.9","Malignant neoplasm of brain, unspecified","Brain");
-addCancerMap(14,"C50.919","Malignant neoplasm of unspecified site of unspecified female breast","Breast"); // Need to add check/fix for male
-addCancerMap(15,"C53.9","Malignant neoplasm of cervix uteri, unspecified","Cervix (cervical)");
-addCancerMap(16,"C18.9","Malignant neoplasm of colon, unspecified","Colon"); 
-addCancerMap(17,"C15.9","Malignant neoplasm of esophagus, unspecified","Esophagus (esophageal)"); 
-addCancerMap(18,"C23","Malignant neoplasm of gallbladder","Gallbladder"); 
-addCancerMap(19,"C64.9","Malignant neoplasm of unspecified kidney, except renal pelvis","Kidney"); 
-addCancerMap(20,"C32.9","Malignant neoplasm of larynx, unspecified","Larynx/ windpipe"); 
-addCancerMap(21,"C95.90","Leukemia, unspecified not having achieved remission","Leukemia"); 
-addCancerMap(22,"C22.9","Malignant neoplasm of liver, not specified as primary or secondary","Liver"); 
-addCancerMap(23,"C34.90","Malignant neoplasm of unspecified part of unspecified bronchus or lung","Lung"); 
-addCancerMap(24,"C96.9","Malignant neoplasm of lymphoid, hematopoietic and related tissue, unspecified","Lymphoma/ Hodgkins disease"); 
-addCancerMap(25,"C43.9","Malignant melanoma of skin, unspecified","Melanoma"); 
-addCancerMap(26,"C06.9","Malignant neoplasm of mouth, unspecified","Mouth/tongue/lip"); 
-addCancerMap(27,"C72.9","Malignant neoplasm of central nervous system, unspecified","Nervous system"); 
-addCancerMap(28,"C56.9","Malignant neoplasm of unspecified ovary","Ovary (ovarian)"); 
-addCancerMap(29,"C25.9","Malignant neoplasm of pancreas, unspecified","Pancreas (pancreatic)"); 
-addCancerMap(30,"C61","Malignant neoplasm of prostate","Prostate"); 
-addCancerMap(31,"C20","Malignant neoplasm of rectum","Rectum (rectal)"); 
-addCancerMap(32,"C44.99","Other specified malignant neoplasm of skin, unspecified","Skin (non-melanoma)"); 
-addCancerMap(33,"C44.90","Unspecified malignant neoplasm of skin, unspecified","Skin (don't know what kind)"); 
-addCancerMap(34,"C49.9","Malignant neoplasm of connective and soft tissue, unspecified","Soft tissue (muscle or fat)"); 
-addCancerMap(35,"C16.9","Malignant neoplasm of stomach, unspecified","Stomach"); 
-addCancerMap(36,"C62.90","Malignant neoplasm of unspecified testis, unspecified whether descended or undescended","Testis (testicular)"); 
-addCancerMap(37,"C73","Malignant neoplasm of thyroid gland","Thyroid"); 
-addCancerMap(38,"C55","Malignant neoplasm of uterus, part unspecified","Uterus (uterine)"); 
-addCancerMap(39,"C76.8","Malignant neoplasm of other specified ill-defined sites","Other"); 
-addCancerMap(99,"C80.1","Malignant (primary) neoplasm, unspecified","Don't know");
+addCancerMap(10,"C67.9","Malignant neoplasm of bladder, unspecified","Bladder",'mcq240a');
+addCancerMap(11,"C96.9","Other and unspecified malignant neoplasms of lymphoid, hematopoietic and related tissue","Blood",'mcq240b');
+addCancerMap(12,"C41.9","Malignant neoplasm of bone and articular cartilage, unspecified","Bone",'mcq240c');
+addCancerMap(13,"C71.9","Malignant neoplasm of brain, unspecified","Brain",'mcq240d');
+addCancerMap(14,"C50.919","Malignant neoplasm of unspecified site of unspecified female breast","Breast",'mcq240e'); // Need to add check/fix for male
+addCancerMap(15,"C53.9","Malignant neoplasm of cervix uteri, unspecified","Cervix (cervical)",'mcq240f');
+addCancerMap(16,"C18.9","Malignant neoplasm of colon, unspecified","Colon",'mcq240g'); 
+addCancerMap(17,"C15.9","Malignant neoplasm of esophagus, unspecified","Esophagus (esophageal)"),'mcq240h'; 
+addCancerMap(18,"C23","Malignant neoplasm of gallbladder","Gallbladder",'mcq240i'); 
+addCancerMap(19,"C64.9","Malignant neoplasm of unspecified kidney, except renal pelvis","Kidney",'mcq240j'); 
+addCancerMap(20,"C32.9","Malignant neoplasm of larynx, unspecified","Larynx/ windpipe",'mcq240k'); 
+addCancerMap(21,"C95.90","Leukemia, unspecified not having achieved remission","Leukemia",'mcq240l'); 
+addCancerMap(22,"C22.9","Malignant neoplasm of liver, not specified as primary or secondary","Liver",'mcq240m'); 
+addCancerMap(23,"C34.90","Malignant neoplasm of unspecified part of unspecified bronchus or lung","Lung",'mcq240n'); 
+addCancerMap(24,"C96.9","Malignant neoplasm of lymphoid, hematopoietic and related tissue, unspecified","Lymphoma/ Hodgkins disease",'mcq240o'); 
+addCancerMap(25,"C43.9","Malignant melanoma of skin, unspecified","Melanoma",'mcq240p'); 
+addCancerMap(26,"C06.9","Malignant neoplasm of mouth, unspecified","Mouth/tongue/lip",'mcq240q'); 
+addCancerMap(27,"C72.9","Malignant neoplasm of central nervous system, unspecified","Nervous system",'mcq240r'); 
+addCancerMap(28,"C56.9","Malignant neoplasm of unspecified ovary","Ovary (ovarian)",'mcq240s'); 
+addCancerMap(29,"C25.9","Malignant neoplasm of pancreas, unspecified","Pancreas (pancreatic)",'mcq240t'); 
+addCancerMap(30,"C61","Malignant neoplasm of prostate","Prostate",'mcq240u'); 
+addCancerMap(31,"C20","Malignant neoplasm of rectum","Rectum (rectal)",'mcq240v'); 
+addCancerMap(32,"C44.99","Other specified malignant neoplasm of skin, unspecified","Skin (non-melanoma)",'mcq240w'); 
+addCancerMap(33,"C44.90","Unspecified malignant neoplasm of skin, unspecified","Skin (don't know what kind)",'mcq240x'); 
+addCancerMap(34,"C49.9","Malignant neoplasm of connective and soft tissue, unspecified","Soft tissue (muscle or fat)",'mcq240y'); 
+addCancerMap(35,"C16.9","Malignant neoplasm of stomach, unspecified","Stomach",'mcq240z'); 
+addCancerMap(36,"C62.90","Malignant neoplasm of unspecified testis, unspecified whether descended or undescended","Testis (testicular)",'mcq240aa'); 
+addCancerMap(37,"C73","Malignant neoplasm of thyroid gland","Thyroid",'mcq240bb'); 
+addCancerMap(38,"C55","Malignant neoplasm of uterus, part unspecified","Uterus (uterine)",'mcq240cc'); 
+addCancerMap(39,"C76.8","Malignant neoplasm of other specified ill-defined sites","Other",'mcq240dd'); 
+addCancerMap(99,"C80.1","Malignant (primary) neoplasm, unspecified","Don't know",'mcq240dk');
 
-function mcqCancerLookup(problemList,mcqData)
+
+function problemInfo(code,desc)
 {
-    if(((mcqData>=10) && (mcqData<=39)) || (mcqData===99))
+    this.code=code;
+    this.description=desc;
+    this.ageOfDiagnosis=null;
+    this.active=true;
+    return this;
+}
+
+
+function mcqCancerLookup(problemList,mcqData,mcqField)
+{
+    var cancerType=mcqData[mcqField];
+    if(((cancerType>=10) && (cancerType<=39)) || (cancerType===99))
     {
-        problemList.push(cancerMap[mcqData]);
+        var mapEntry=cancerMap[cancerType];
+        var problemData=new problemInfo(mapEntry.code,mapEntry.description)
+        var ageData=mcqData[mapEntry.ageInfo];
+        if(typeof(ageData)!== "undefined")
+        {
+            if((ageData>=0) && (ageData<=80))
+            {
+                problemData.ageOfDiagnosis=ageData;
+            }
+        }        
+        problemList.push(problemData);
     }
+}
+
+var arthritisMap={};
+function addArthritisMap(NHANESCode,ICDCode,Description,NHANES)
+{
+    arthritisMap[NHANESCode]=new problemEntry(ICDCode,Description,NHANES,"mcq180a");
+}
+addArthritisMap(1,"M19.90","Unspecified osteoarthritis, unspecified site","Osteoarthritis or degenerative arthritis");
+addArthritisMap(2,"M05.9","Rheumatoid arthritis with rheumatoid factor, unspecified","Rheumatoid arthritis");
+addArthritisMap(3,"L40.50","Arthropathic psoriasis, unspecified","Psoriatic arthritis");
+addArthritisMap(4,"M13.88","Other specified arthritis, other site","Other");
+addArthritisMap(9,"M13.10","Monoarthritis, not elsewhere classified, unspecified site","Don't know");
+function mcqArthritisLookup(problemList,mcqData)
+{
+    if(mcqData['mcq160a']!==1)
+    {
+        return;
+    }
+    var arthritisType=arthritisMap[mcqData['mcq195']];
+    
+    var problemEntry=new problemInfo(arthritisType.code,arthritisType.description);
+    var ageData=mcqData['mcq180a'];
+    if(typeof(ageData)!== "undefined")
+    {
+        if((ageData>=0) && (ageData<=80))
+        {
+            problemEntry.ageOfDiagnosis=ageData;
+        }
+    }
+    problemList.push(problemEntry);
 }
 function MCQData(mcq_row)
 {
@@ -240,15 +296,39 @@ function MCQData(mcq_row)
     this.problemList=[];
     for(var question in problemMap)
     {
+        var mapEntry=problemMap[question];
         if(mcq_row[question]===1)  // 1 is Yes, 2 is No
         {
-            this.problemList.push(problemMap[question]);
+         
+            
+            var problemData={
+                code: mapEntry.code
+                ,description:mapEntry.description
+                ,ageOfDiagnosis: null
+                ,active: true
+            };
+            var ageData=mcq_row[mapEntry.ageInfo];
+            if(typeof(ageData)!== "undefined")
+            {
+                if((ageData>=0) && (ageData<=80))
+                {
+                    problemData.ageOfDiagnosis=ageData;
+                }
+            }
+            if(mapEntry.stillHave!==null)
+            {
+                if(mcq_row[mapEntry.stillHave]===2)
+                {
+                    problemData.active=false;
+                }
+            }
+            this.problemList.push(problemData);
         }
     }
-    mcqCancerLookup(this.problemList,mcq_row['mcq230a']);
-    mcqCancerLookup(this.problemList,mcq_row['mcq230b']);
-    mcqCancerLookup(this.problemList,mcq_row['mcq230c']);
-
+    mcqCancerLookup(this.problemList,mcq_row,'mcq230a');
+    mcqCancerLookup(this.problemList,mcq_row,'mcq230b');
+    mcqCancerLookup(this.problemList,mcq_row,'mcq230c');
+    mcqArthritisLookup(this.problemList,mcq_row);
     
     
     
@@ -422,8 +502,8 @@ exports.NHANESData=function(dbServer,suffix)
         return new Promise(function(resolve,reject)
         {
             var mcq_table = "mcq" + self.suffix;
-            var limits = " LIMIT 500 ";
-            limits = "";
+            var limits = " LIMIT 50 ";
+//            limits = "";
             var sqlSelectMCQ = " SELECT * FROM "+mcq_table + limits;
             self.dbConn.query(sqlSelectMCQ,[],function(err,rows)
             {
@@ -920,6 +1000,14 @@ exports.NHANESData=function(dbServer,suffix)
             
         });// End New Promise
     };
+    
+    this.load_lab_table = function(lab_table_info)
+    {
+        return new Promise(function(resolve,reject)
+        {
+            
+        });
+    }
     return this;
 
 };

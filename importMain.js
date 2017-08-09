@@ -12,7 +12,7 @@ var asyncLoop = require('node-async-loop');
 var cheerio = require('cheerio');
 
 var serverData={
-    server_name: 'http://192.168.249.128/openemr'
+    server_name: 'http://192.168.249.129/libreehr'
     ,userid: 'admin'
     ,password: 'password'
 }
@@ -152,11 +152,11 @@ function updateSocialData()
 }
 
 //createPatients();
-//loadMCQProblemData();
+loadMCQProblemData();
 //loadBPQProblemData();
 //loadDIQProblemData();
 //loadKIQ_UProblemData();
-loadRXQ_RX_Data();
+//loadRXQ_RX_Data();
 //loadLab_Data();
 //loadInsurance_Data();
 //updateDemographics();
